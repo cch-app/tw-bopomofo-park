@@ -51,7 +51,12 @@ let clip = null, liveUtterance = null, retry = 0;
    refused route 1 once uses route 2 first from then on. Neither route is ever switched off for good.
    Phones only allow sound that starts in a tap, so the first touch anywhere unlocks both routes. */
 const player = (() => { try { const a = new Audio(); a.preload = 'auto'; a.setAttribute('playsinline', ''); a.setAttribute('webkit-playsinline', ''); return a; } catch(e) { return null; } })();
+/* Keep the browser-unlock element separate from the voice player. Reusing
+   player here lets the first real tap pause the silent unlock playback just
+   before the requested clip starts, which can make the clip silently fail. */
+const unlocker = (() => { try { const a = new Audio(); a.preload = 'auto'; a.setAttribute('playsinline', ''); a.setAttribute('webkit-playsinline', ''); return a; } catch(e) { return null; } })();
 let playToken = 0, htmlRefused = false, webSrc = null, unlocks = 0, voiceReady = false, pendingLine = null;
+const VOICE_WAIT_MS = 30000;
 const SILENCE = 'data:audio/mpeg;base64,SUQzBAAAAAAAI1RTU0UAAAAPAAADTGF2ZjYwLjE2LjEwMAAAAAAAAAAAAAAA//OEwAAAAAAAAAAAAEluZm8AAAAPAAAACQAABCAARUVFRUVFRUVFRUVdXV1dXV1dXV1dXXR0dHR0dHR0dHR0i4uLi4uLi4uLi4uioqKioqKioqKiorq6urq6urq6urq60dHR0dHR0dHR0dHo6Ojo6Ojo6Ojo6P//////////////AAAAAExhdmM2MC4zMQAAAAAAAAAAAAAAACQD8AAAAAAAAAQgDeb0IwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA//NExAAAAANIAAAAAExBTUUzLjEwMFVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVTEFNRTMu//NExFMAAANIAAAAADEwMFVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVTEFNRTMu//NExKYAAANIAAAAADEwMFVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVTEFNRTMu//NExKwAAANIAAAAADEwMFVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVTEFNRTMu//NExKwAAANIAAAAADEwMFVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVTEFNRTMu//NExKwAAANIAAAAADEwMFVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVTEFNRTMu//NExKwAAANIAAAAADEwMFVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV//NExKwAAANIAAAAAFVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV//NExKwAAANIAAAAAFVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV';
 /* the first touches unlock sound: resume Web Audio, play a silent clip on the <audio> element, and ask iPhones to
    treat this page as media playback (so the silent switch does not mute it) */
@@ -59,7 +64,7 @@ function unlockAudio(){
   try { if (navigator.audioSession && navigator.audioSession.type !== 'playback') navigator.audioSession.type = 'playback'; } catch(e) {}
   const a = ac();
   if (a) { try { if (a.state !== 'running') a.resume(); const b = a.createBuffer(1, 1, 22050), src = a.createBufferSource(); src.buffer = b; src.connect(a.destination); src.start(0); } catch(e) {} }
-  if (player && unlocks < 2 && player.paused) { unlocks++; try { player.src = SILENCE; const p = player.play(); if (p && p.catch) p.catch(() => {}); } catch(e) {} }
+  if (unlocker && unlocks < 2 && unlocker.paused) { unlocks++; try { unlocker.src = SILENCE; const p = unlocker.play(); if (p && p.catch) p.catch(() => {}); } catch(e) {} }
 }
 ['pointerdown', 'touchend', 'mousedown', 'keydown'].forEach(ev => document.addEventListener(ev, unlockAudio, {capture: true, passive: true}));
 function unlockPlayer(){ unlockAudio(); }
@@ -103,7 +108,7 @@ function playClip(plain){
 /* the recorded voice loads after the page is up; a line asked for before then waits for it (up to 8 s) */
 function voiceLoaded(){
   voiceReady = true;
-  if (pendingLine && performance.now() - pendingLine.t < 8000) speak(pendingLine.text);
+  if (pendingLine && performance.now() - pendingLine.t < VOICE_WAIT_MS) speak(pendingLine.text, true);
   pendingLine = null;
 }
 /* what the voice reported for the last few lines, shown in the grown-ups panel */
@@ -131,14 +136,19 @@ function utter(text){
 const HAS_SYM = /[ㄅ-ㄩ]/;
 let devFails = 0;
 const twReady = () => { if (!voice) pickVoice(); return isTW(voice) && devFails < 2; };
-function speak(text){
+function speak(text, fromTap = false){
   if (!S.sound || !text) return;
   const plain = String(text).replace(/[「」]/g, '');
   const mode = S.voiceMode || 'auto', clip = !!AUDIO[plain];
-  const late = performance.now() > 9000;              /* the recordings never loaded: stop waiting for them */
+  const late = performance.now() > VOICE_WAIT_MS;     /* allow the local recording bundle time to finish after heavy scenes */
   if (mode === 'device' || (mode === 'auto' && twReady() && !HAS_SYM.test(plain))) { speakDevice(plain, true); return; }
   if (clip) { playClip(plain); return; }
-  if (!voiceReady && !late) { pendingLine = {text: plain, t: performance.now()}; logSpeech(plain, 'waiting for the recorded voice to load'); return; }
+  if (!voiceReady && !late) {
+    /* Keep tap requests until the local recording bundle is ready. The tap has
+       already unlocked Web Audio, so playClip can still start through that
+       route when voiceLoaded() replays the request. */
+    pendingLine = {text: plain, t: performance.now()}; logSpeech(plain, 'waiting for the recorded voice to load'); return;
+  }
   speakDevice(plain, false);
 }
 /* the device voice; with clipBack, a line that fails or never starts is played from the recordings instead */

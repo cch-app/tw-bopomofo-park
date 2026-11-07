@@ -10,7 +10,7 @@
 const Gate3D = (function(){
   const T = window.THREE;
   let ok = false, R = null, scene = null, cam = null, holder = null, running = false, raf = 0, last = 0;
-  let season = -1, anim = [], frame = null, walk = null, failed = false, maxAniso = 4, partsObj = null;
+  let season = -1, anim = [], frame = null, walk = null, failed = false, maxAniso = 4, partsObj = null, readyFrames = 0;
 
   function supported(){
     if (!T || failed) return false;
@@ -587,6 +587,18 @@ const Gate3D = (function(){
     if (partsObj) partsObj.position.set(cam.position.x, 0, cam.position.z - 22);
     placeTitle(frame);
     R.render(scene, cam);
+    const sec = document.getElementById('gate');
+    if (sec && !sec.classList.contains('g3d')) {
+      readyFrames = R.domElement.width > 0 && R.domElement.height > 0 && R.info.render.calls > 0
+        ? readyFrames + 1
+        : 0;
+      if (readyFrames >= 3 && sec.isConnected) {
+        sec.classList.add('g3d');
+        sec.classList.remove('gate-loading');
+        const btn = document.getElementById('gateBtn');
+        if (btn) btn.disabled = false;
+      }
+    }
   }
   /* for checking the walk-through one step at a time */
   function peek(k){ if (!ok) return; place(frame, k); if (partsObj) partsObj.position.set(cam.position.x, 0, cam.position.z - 28); placeTitle(frame); R.render(scene, cam); }
@@ -622,13 +634,19 @@ const Gate3D = (function(){
   }
   function disable(){
     ok = false;
-    const sec = document.getElementById('gate'); if (sec) sec.classList.remove('g3d');
+    readyFrames = 0;
+    const sec = document.getElementById('gate'); if (sec) sec.classList.remove('g3d', 'gate-loading');
+    const btn = document.getElementById('gateBtn'); if (btn) btn.disabled = false;
     if (holder) holder.remove();
     if (typeof Castle !== 'undefined') Castle.draw();
   }
   function disposeScene(){ if (!scene) return; scene.traverse(o => { if (o.geometry) o.geometry.dispose(); if (o.material) [].concat(o.material).forEach(m => { Object.values(m).forEach(v => v && v.isTexture && v.dispose()); m.dispose(); }); }); scene = null; }
   function start(){
     if (!init()) return false;
+    readyFrames = 0;
+    const sec = document.getElementById('gate');
+    sec?.classList.remove('g3d');
+    sec?.classList.add('gate-loading');
     const si = typeof Seasons !== 'undefined' && Seasons.current >= 0 ? Seasons.current : 0;
     if (si !== season || !scene) { disposeScene(); season = si; try { build(si); } catch(e) { console.warn('3D entrance failed to build; using the illustrated castle.', e); failed = true; disable(); return false; } }
     walk = null;
@@ -636,7 +654,15 @@ const Gate3D = (function(){
     if (!running && !document.hidden) { running = true; last = 0; settleUntil = performance.now() + 1200; raf = requestAnimationFrame(render); }
     return true;
   }
-  function stop(){ running = false; cancelAnimationFrame(raf); }
+  function stop(){
+    running = false;
+    cancelAnimationFrame(raf);
+    readyFrames = 0;
+    const sec = document.getElementById('gate');
+    sec?.classList.remove('g3d', 'gate-loading');
+    const btn = document.getElementById('gateBtn');
+    if (btn) btn.disabled = false;
+  }
   document.addEventListener('visibilitychange', () => { if (document.hidden) stop(); else if (ok && current === 'gate') start(); });
   /* walk through the gate: the camera moves down the plaza, through the arch and into the park */
   function enter(ms = 1700){ if (!ok) return 0; walk = {t0: performance.now(), ms}; return ms; }

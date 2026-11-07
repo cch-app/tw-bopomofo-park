@@ -21,14 +21,33 @@ function show(name){
   $('homeBtn').hidden = !['map','select','book'].includes(name);
   $(name).scrollTop = 0; updateHud(); syncSeason();
   /* the entrance: the real 3D castle where WebGL works, the illustrated one otherwise */
-  if (name === 'gate') { if (!Gate3D.start()) Castle.draw(); } else Gate3D.stop();
+  if (name === 'gate') {
+    const gate = $('gate');
+    $('gateBtn').disabled = true;
+    gate.classList.add('gate-loading');
+    if (!Gate3D.start()) {
+      gate.classList.remove('gate-loading');
+      $('gateBtn').disabled = false;
+      Castle.draw();
+    }
+  } else Gate3D.stop();
   pauseStages();
 }
 function guide(npc, text, html){
   return `<div class="guide">${npcHTML(npc)}<div class="bubble paperish"><div class="line">${html || rb(text)}</div><button class="say" data-say="${text}" aria-label="再聽一次">${SPEAKER}</button></div></div>`;
 }
-document.addEventListener('click', e => { const b = e.target.closest('[data-say]'); if (b) speak(b.dataset.say); });
-function setLine(scope, text, html){ const b = scope.querySelector('.bubble'); b.querySelector('.line').innerHTML = html || rb(text); b.querySelector('.say').dataset.say = text; speak(text); }
+function hear(text){
+  /* Keep this inside the user gesture as a fallback for browsers that do not
+     expose pointerdown/keydown consistently. audio.js uses a separate
+     unlocker, so this cannot interrupt the requested voice clip. */
+  if (typeof unlockAudio === 'function') unlockAudio();
+  speak(text, true);
+}
+document.addEventListener('click', e => {
+  const b = e.target && typeof e.target.closest === 'function' ? e.target.closest('[data-say]') : null;
+  if (b) hear(b.dataset.say);
+}, {capture: true});
+function setLine(scope, text, html, fromTap = false){ const b = scope.querySelector('.bubble'); b.querySelector('.line').innerHTML = html || rb(text); b.querySelector('.say').dataset.say = text; fromTap ? hear(text) : speak(text); }
 function updateHud(){
   $('countNum').textContent = S.stickers.length;
   if (!S.hero) return;
@@ -57,10 +76,10 @@ function caption(text, anchor){
   const r = anchor.getBoundingClientRect(); c.style.left = Math.max(12, r.left) + 'px'; c.style.bottom = (innerHeight - r.top + 10) + 'px';
   clearTimeout(sayTimer); sayTimer = setTimeout(() => { c.hidden = true; }, Math.max(2600, String(text).length * 380));
 }
-$('me').addEventListener('click', () => { const m = $('me'); m.classList.remove('hop'); void m.offsetWidth; m.classList.add('hop'); const t = LINES.iam(heroOf().name); caption(t, m); speak(t); });
+$('me').addEventListener('click', () => { const m = $('me'); m.classList.remove('hop'); void m.offsetWidth; m.classList.add('hop'); const t = LINES.iam(heroOf().name); caption(t, m); hear(t); });
 /* back to the gate from the map, hero select or sticker book */
 $('homeBtn').innerHTML = HOME;
-$('homeBtn').addEventListener('click', () => { tone(660,0,.12,'triangle'); show('gate'); speak(LINES.gate); });
+$('homeBtn').addEventListener('click', () => { tone(660,0,.12,'triangle'); show('gate'); hear(LINES.gate); });
 $('bookBtn').addEventListener('click', () => { beforeBook = current; renderBook(); });
 const shuffle = a => { a = [...a]; for (let i = a.length-1; i > 0; i--) { const j = Math.floor(Math.random()*(i+1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
 
@@ -69,7 +88,6 @@ function progressSeason(){ const nx = LEVELS.findIndex((_, i) => !S.done.include
 function syncSeason(){ Seasons.set(current === 'lesson' && L ? seasonOf(L.li) : progressSeason()); }
 
 /* ---------- gate ---------- */
-init3D();
 mountGate($('gateBtn'));
 $('gateSign').innerHTML = rb('四季樂園');
 $('gateGuide').outerHTML = guide('owl', LINES.gate);
@@ -132,11 +150,11 @@ function renderSelect(){
     el.querySelectorAll('.hero-card').forEach(x => x.classList.toggle('on', x === b));
     pick = b.dataset.h; tone(659,0,.2,'triangle');
     const st = $('selStage'); st.hidden = false; mountStage(st, pick, 0);
-    speak(LINES.iam(HEROES.find(h => h.id === pick).name));
+    hear(LINES.iam(HEROES.find(h => h.id === pick).name));
     $('goBtn').hidden = false;
     st.scrollIntoView({behavior: reduced ? 'auto' : 'smooth', block:'nearest'});
   }));
-  $('selStage').addEventListener('click', () => { cheerStage(); if (pick) speak(LINES.iam(HEROES.find(h => h.id === pick).name)); });
+  $('selStage').addEventListener('click', () => { cheerStage(); if (pick) hear(LINES.iam(HEROES.find(h => h.id === pick).name)); });
   $('goBtn').addEventListener('click', () => { S.hero = pick; save(); chime(); renderMap(); });
   show('select'); speak(LINES.select);
 }
@@ -164,11 +182,11 @@ function renderMap(){
   el.querySelectorAll('.lv').forEach(b => b.addEventListener('click', () => {
     const i = +b.dataset.i;
     if (walking) return;
-    if (!isOpen(i)) { thud(); setLine(el, LINES.locked); return; }
+    if (!isOpen(i)) { thud(); setLine(el, LINES.locked, undefined, true); return; }
     tone(784,0,.12,'triangle');
     walkTo(i, () => startLevel(i));
   }));
-  $('walker').addEventListener('click', () => { hopWalker(); speak(LINES.iam(heroOf().name)); });
+  $('walker').addEventListener('click', () => { hopWalker(); hear(LINES.iam(heroOf().name)); });
   show('map');
   placeWalker(atPt(S.mapAt));
   /* the board scrolls so the hero is in view, then walks on to the newly opened stop */
@@ -250,10 +268,10 @@ function pickRound(stage, el, step, correct, onRight, replay){
   let misses = 0, done = false;
   stage.querySelectorAll('.choice').forEach(b => b.addEventListener('click', () => {
     if (done) return;
-    if (b.dataset.v === correct) { done = true; b.classList.add('right'); chime(); onRight(b); setLine(el, yay()); setTimeout(next, 1700); }
+    if (b.dataset.v === correct) { done = true; b.classList.add('right'); chime(); onRight(b); setLine(el, yay(), undefined, true); setTimeout(next, 1700); }
     else {
       misses++; b.classList.remove('wobble'); void b.offsetWidth; b.classList.add('wobble'); thud();
-      setLine(el, LINES.again); setTimeout(replay, 1500);
+      setLine(el, LINES.again, undefined, true); setTimeout(replay, 1500);
       if (misses >= 2) stage.querySelector(`.choice[data-v="${correct}"]`).classList.add('hint');
     }
   }));
@@ -284,7 +302,7 @@ function stepToneMeet(){
   stage.innerHTML = `<div class="card paperish"><div class="tones">${TONES.map(t => `<button class="tone-b" data-c="${t.c}"><span class="z">${zhu(t.z, 'big')}</span><span class="c">${t.c}</span></button>`).join('')}</div></div>
     <button class="next" id="nextBtn" aria-label="下一個" hidden>${ARROW}</button>`;
   stage.querySelectorAll('.tone-b').forEach(b => b.addEventListener('click', () => {
-    speak(b.dataset.c); b.classList.add('heard'); heard.add(b.dataset.c);
+    hear(b.dataset.c); b.classList.add('heard'); heard.add(b.dataset.c);
     if (heard.size === 4) $('nextBtn').hidden = false;
   }));
   $('nextBtn').addEventListener('click', next);
@@ -401,7 +419,7 @@ function finish(){
   show('reward');
   $('countNum').textContent = n - fresh.length;
   mountStage($('rwStage'), h.id, st);
-  $('rwStage').addEventListener('click', () => { cheerStage(); speak(LINES.iam(h.name)); });
+  $('rwStage').addEventListener('click', () => { cheerStage(); hear(LINES.iam(h.name)); });
   [...el.querySelectorAll('.get')].forEach((g, i) => setTimeout(() => {
     peel(); if (fresh.includes(g.dataset.id)) flySticker(g, stickerOf(g.dataset.id).e);
   }, 450 + i*260));
@@ -675,7 +693,8 @@ function openPanel(){
   $('pClose').addEventListener('click', () => { p.hidden = true; });
 }
 
-/* the recorded voice is loaded after the page is up: it is the biggest file */
+/* Start loading the recorded voice before the gate builds its heavier scene, so
+   speaker taps on the first two screens do not race the audio bundle. */
 (function loadVoice(){ const sc = document.createElement('script'); sc.src = 'js/voice.js'; sc.async = true;
   sc.onload = voiceLoaded; sc.onerror = () => { voiceReady = true; pendingLine = null; }; document.body.append(sc); })();
 show('gate');

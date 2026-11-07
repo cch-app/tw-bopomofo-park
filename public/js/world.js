@@ -135,12 +135,6 @@ const WorldArt = (function(){
     for (let z = 3; z >= 0; z--) out += zoneShape(z, GROUND[z]).replace('/>', ' stroke="#2b2452" stroke-width="3"/>');
     for (let z = 0; z < 4; z++) out += texture(z, rand(97 + z*13));
     for (let z = 0; z < 4; z++) out += zoneDeco(z).map(d => `<g filter="url(#wink)">${d}</g>`).join('');
-    /* start pad: a small copy of the park gate */
-    const [sx, sy] = START_PT;
-    out += `<g filter="url(#wink)"><g transform="translate(${sx} ${sy+8})"><ellipse cx="0" cy="6" rx="60" ry="10" fill="#000" opacity=".1"/><path d="M-40 0 V-34 A40 40 0 0 1 40 -34 V0 H28 V-34 A28 28 0 0 0 -28 -34 V0Z" fill="#ffffff" stroke="#ffd466" stroke-width="3"/>
-      <rect x="-52" y="-48" width="16" height="50" rx="5" fill="#7d85f4"/><rect x="36" y="-48" width="16" height="50" rx="5" fill="#7d85f4"/><path d="M-44 -76 L-56 -48 H-32Z M44 -76 L32 -48 H56Z" fill="#ff6fa3"/>
-      <path d="M-50 -60 L-44 -76 L-47 -58Z M38 -58 L44 -76 L41 -60Z" fill="#fff" opacity=".85"/><circle cx="-44" cy="-36" r="4" fill="#ffd466"/><circle cx="44" cy="-36" r="4" fill="#ffd466"/>
-      <rect x="-20" y="-84" width="40" height="18" rx="9" fill="#ff6fa3" stroke="#fff" stroke-width="2"/><path d="M0 -81 l3 6 h6 l-5 4 l2 6 l-6 -4 l-6 4 l2 -6 l-5 -4 h6z" fill="#ffd84d"/></g></g>`;
     /* the road: a dark edge, the sandy road, then dashes; segments not yet unlocked stay as faint dotted tracks */
     let under = '', road = '', dots = '', faint = '';
     for (let k = 0; k < LEVELS.length; k++) {
@@ -152,6 +146,12 @@ const WorldArt = (function(){
     faint += `<path d="M${last[0]} ${last[1]} C${last[0]} ${(last[1]+SUMMIT_PT[1])/2} ${SUMMIT_PT[0]} ${(last[1]+SUMMIT_PT[1])/2} ${SUMMIT_PT[0]} ${SUMMIT_PT[1]}"/>`;
     out += `<g fill="none" stroke-linecap="round"><g stroke="#ffffff" stroke-width="12" stroke-dasharray="2 18" opacity=".9">${faint}</g>
       <g stroke="#2b2452" stroke-width="34">${under}</g><g stroke="#f6dea6" stroke-width="27">${road}</g><g stroke="#e8c98c" stroke-width="5" stroke-dasharray="3 11">${dots}</g></g>`;
+    /* start pad: keep the gate above the road so the road meets its entrance instead of painting over it */
+    const [sx, sy] = START_PT;
+    out += `<g filter="url(#wink)"><g transform="translate(${sx} ${sy+8})"><ellipse cx="0" cy="6" rx="60" ry="10" fill="#000" opacity=".1"/><path d="M-40 0 V-34 A40 40 0 0 1 40 -34 V0 H28 V-34 A28 28 0 0 0 -28 -34 V0Z" fill="#ffffff" stroke="#ffd466" stroke-width="3"/>
+      <rect x="-52" y="-48" width="16" height="50" rx="5" fill="#7d85f4"/><rect x="36" y="-48" width="16" height="50" rx="5" fill="#7d85f4"/><path d="M-44 -76 L-56 -48 H-32Z M44 -76 L32 -48 H56Z" fill="#ff6fa3"/>
+      <path d="M-50 -60 L-44 -76 L-47 -58Z M38 -58 L44 -76 L41 -60Z" fill="#fff" opacity=".85"/><circle cx="-44" cy="-36" r="4" fill="#ffd466"/><circle cx="44" cy="-36" r="4" fill="#ffd466"/>
+      <rect x="-20" y="-84" width="40" height="18" rx="9" fill="#ff6fa3" stroke="#fff" stroke-width="2"/><path d="M0 -81 l3 6 h6 l-5 4 l2 6 l-6 -4 l-6 4 l2 -6 l-5 -4 h6z" fill="#ffd84d"/></g></g>`;
     /* a stepping pad under every stop */
     out += `<g filter="url(#wink)">` + NODE_PT.map(([x, y], i) => `<ellipse cx="${x}" cy="${y+36}" rx="48" ry="15" fill="#2b2452" opacity=".35"/><ellipse cx="${x}" cy="${y+30}" rx="48" ry="15" fill="${['#8ccf6c','#e6c27a','#d98a43','#c9dcef'][seasonOf(i)]}" stroke="#2b2452" stroke-width="3"/><ellipse cx="${x}" cy="${y+26}" rx="40" ry="9" fill="#ffffff" opacity=".35"/>`).join('') + `</g>`;
     /* lift the moving parts (data-move) out of the static picture, keeping their position */

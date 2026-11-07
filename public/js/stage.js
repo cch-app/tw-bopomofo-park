@@ -60,6 +60,7 @@ async function mountStage(box, kind, st){
   Spl.liveKind = null; Spl.liveBox = box;
   box.classList.remove('live');
   box.innerHTML = heroHTML(kind, st, 'stage-poster');
+  if (typeof init3D === 'function') init3D();
   threeMount(box, kind, st);
   const scene = slotOf(kind).scene;
   if (!scene || Spl.failed.has(kind)) return;

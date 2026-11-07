@@ -1,7 +1,7 @@
 'use strict';
 /* ---------- 3D animals (three.js): sculpted bodies (cast/*.bin), shell fur, glossy eyes with real irises ---------- */
 const T = window.THREE;
-let has3D = false;
+let has3D = false, initStarted = false;
 const R3 = {};
 const V = (x,y,z) => new T.Vector3(x,y,z);
 const lin = h => new T.Color(h).convertSRGBToLinear();
@@ -10,7 +10,8 @@ const mixc = (a, b, t) => asLin(a).clone().lerp(asLin(b), Math.min(1, Math.max(0
 const sstep = (a, b, x) => { const t = Math.min(1, Math.max(0, (x - a) / (b - a))); return t*t*(3 - 2*t); };
 const shared = o => { o.userData = o.userData || {}; o.userData.shared = true; return o; };
 function init3D(){
-  if (!T) return;
+  if (!T || initStarted) return;
+  initStarted = true;
   try {
     const sc = document.createElement('canvas');
     R3.snap = new T.WebGLRenderer({canvas:sc, alpha:true, antialias:true, preserveDrawingBuffer:true});
@@ -31,7 +32,7 @@ function init3D(){
     /* if the device drops 3D, show the picture again and stop drawing */
     R3.liveCanvas.addEventListener('webglcontextlost', e => { e.preventDefault(); has3D = false; if (Live.box) Live.box.classList.remove('live'); R3.liveCanvas.remove(); });
     has3D = true;
-  } catch(e) { has3D = false; }
+  } catch(e) { has3D = false; initStarted = false; }
 }
 /* soft studio light for reflections in eyes, noses and frog skin */
 function envFor(r){
