@@ -1,0 +1,124 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>四季樂園 Four Seasons Land</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=LXGW+WenKai+TC:wght@400;700&family=Fredoka:wght@500;600&display=swap">
+<link rel="stylesheet" href="css/game.css">
+<script src="vendor/three.min.js"></script>
+
+<canvas id="sky" aria-hidden="true"></canvas>
+<div id="whiteout"></div>
+<main id="app">
+  <section class="screen" id="gate">
+    <div id="castleBg" aria-hidden="true"></div>
+    <h1 class="sr-only" id="gateName">四季樂園</h1>
+    <button id="gateBtn" aria-label="點大門進入樂園">
+      <span class="sign-title" id="gateSign" aria-hidden="true"></span>
+      <svg viewBox="0 0 340 380" preserveAspectRatio="xMidYMax meet" aria-hidden="true">
+        <defs>
+          <radialGradient id="portalG" cx="50%" cy="40%" r="62%">
+            <stop offset="0" stop-color="#fffaf0"/><stop offset=".35" stop-color="#ffe3ee"/>
+            <stop offset=".75" stop-color="#ffc2d6"/><stop offset="1" stop-color="#9fd8ff"/>
+          </radialGradient>
+          <linearGradient id="towerG" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#9b8cff"/><stop offset="1" stop-color="#5d7bf0"/></linearGradient>
+          <linearGradient id="archG" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#e9e4ff"/></linearGradient>
+          <linearGradient id="signG" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#ff6fa3"/><stop offset="1" stop-color="#ff9a4d"/></linearGradient>
+          <radialGradient id="winG"><stop offset="0" stop-color="#fff6c8"/><stop offset="1" stop-color="#ffc861"/></radialGradient>
+          <!-- sticker outline shared with the world map: an ink edge around each piece -->
+          <filter id="gink" x="-25%" y="-25%" width="150%" height="150%" color-interpolation-filters="sRGB"><feGaussianBlur in="SourceAlpha" stdDeviation="3.2" result="bl"/><feDiffuseLighting in="bl" surfaceScale="4" diffuseConstant="1.3" lighting-color="#ffffff" result="df"><feDistantLight azimuth="235" elevation="48"/></feDiffuseLighting><feSpecularLighting in="bl" surfaceScale="4" specularConstant=".8" specularExponent="20" lighting-color="#ffffff" result="sp"><feDistantLight azimuth="235" elevation="48"/></feSpecularLighting><feComposite in="SourceGraphic" in2="df" operator="arithmetic" k1="1.05" result="lit"/><feComposite in="sp" in2="SourceAlpha" operator="in" result="spi"/><feComposite in="lit" in2="spi" operator="arithmetic" k2="1" k3=".5" result="sh"/><feComposite in="sh" in2="SourceAlpha" operator="in" result="body"/><feMorphology in="SourceAlpha" operator="dilate" radius="2" result="d"/><feFlood flood-color="#2b2452"/><feComposite in2="d" operator="in" result="o"/><feOffset in="o" dy="3.6" result="dr"/><feComponentTransfer in="dr" result="drop"><feFuncA type="linear" slope=".28"/></feComponentTransfer><feMerge><feMergeNode in="drop"/><feMergeNode in="o"/><feMergeNode in="body"/></feMerge></filter>
+          <filter id="gflat" x="-10%" y="-10%" width="120%" height="120%"><feMorphology in="SourceAlpha" operator="dilate" radius="2" result="d"/><feFlood flood-color="#2b2452"/><feComposite in2="d" operator="in" result="o"/><feMerge><feMergeNode in="o"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+          <clipPath id="portalClip"><path d="M98 362V222A72 72 0 0 1 242 222V362Z"/></clipPath>
+          <!-- seasonal hanging decoration (flower ball, wind chime, persimmons, snowflake); filled in by js/seasons.js -->
+          <g id="deco"></g>
+        </defs>
+        <!-- behind the gate: a Ferris wheel that turns slowly, balloons tied to the right tower -->
+        <g stroke="#2b2452" stroke-width="12" stroke-linecap="round"><line x1="170" y1="118" x2="104" y2="300"/><line x1="170" y1="118" x2="236" y2="300"/></g><g stroke="#c9c2f2" stroke-width="7" stroke-linecap="round"><line x1="170" y1="118" x2="104" y2="300"/><line x1="170" y1="118" x2="236" y2="300"/></g>
+        <g><g class="wheel"><circle cx="170" cy="118" r="92" fill="none" stroke="#2b2452" stroke-width="10"/><circle cx="170" cy="118" r="92" fill="none" stroke="#ffffff" stroke-width="5"/><circle cx="170" cy="118" r="76" fill="none" stroke="#d9d3ff" stroke-width="2.5"/>
+          <g stroke="#ffffff" stroke-width="2.5"><line x1="170" y1="118" x2="262" y2="118"/><line x1="170" y1="118" x2="249.7" y2="164"/><line x1="170" y1="118" x2="216" y2="197.7"/><line x1="170" y1="118" x2="170" y2="210"/><line x1="170" y1="118" x2="124" y2="197.7"/><line x1="170" y1="118" x2="90.3" y2="164"/><line x1="170" y1="118" x2="78" y2="118"/><line x1="170" y1="118" x2="90.3" y2="72"/><line x1="170" y1="118" x2="124" y2="38.3"/><line x1="170" y1="118" x2="170" y2="26"/><line x1="170" y1="118" x2="216" y2="38.3"/><line x1="170" y1="118" x2="249.7" y2="72"/></g><circle cx="262" cy="118" r="9" fill="#ff6fa3" stroke="#2b2452" stroke-width="2"/><circle cx="249.7" cy="164" r="9" fill="#ffd84d" stroke="#2b2452" stroke-width="2"/><circle cx="216" cy="197.7" r="9" fill="#3ccfc0" stroke="#2b2452" stroke-width="2"/><circle cx="170" cy="210" r="9" fill="#8c7bff" stroke="#2b2452" stroke-width="2"/><circle cx="124" cy="197.7" r="9" fill="#ff9a4d" stroke="#2b2452" stroke-width="2"/><circle cx="90.3" cy="164" r="9" fill="#5fb8ff" stroke="#2b2452" stroke-width="2"/><circle cx="78" cy="118" r="9" fill="#ff6fa3" stroke="#2b2452" stroke-width="2"/><circle cx="90.3" cy="72" r="9" fill="#ffd84d" stroke="#2b2452" stroke-width="2"/><circle cx="124" cy="38.3" r="9" fill="#3ccfc0" stroke="#2b2452" stroke-width="2"/><circle cx="170" cy="26" r="9" fill="#8c7bff" stroke="#2b2452" stroke-width="2"/><circle cx="216" cy="38.3" r="9" fill="#ff9a4d" stroke="#2b2452" stroke-width="2"/><circle cx="249.7" cy="72" r="9" fill="#5fb8ff" stroke="#2b2452" stroke-width="2"/><circle cx="170" cy="118" r="12" fill="#ffd84d" stroke="#2b2452" stroke-width="2.5"/></g></g>
+        <g><g class="balloons">
+          <path d="M306 150 Q300 120 296 96 M306 150 Q314 116 320 84 M306 150 Q306 126 308 108" stroke="#2b2452" stroke-width="1.5" fill="none"/>
+          <ellipse cx="296" cy="84" rx="12" ry="14" fill="#ff6fa3" stroke="#2b2452" stroke-width="2.5"/><ellipse cx="320" cy="70" rx="13" ry="15" fill="#5fb8ff" stroke="#2b2452" stroke-width="2.5"/><ellipse cx="308" cy="96" rx="11" ry="13" fill="#ffd84d" stroke="#2b2452" stroke-width="2.5"/>
+          <ellipse cx="292" cy="79" rx="3" ry="5" fill="#fff" opacity=".6"/><ellipse cx="316" cy="64" rx="3" ry="5" fill="#fff" opacity=".6"/><ellipse cx="304" cy="91" rx="3" ry="4" fill="#fff" opacity=".6"/>
+        </g></g>
+        <g class="portal">
+          <path d="M98 362V222A72 72 0 0 1 242 222V362Z" fill="url(#portalG)"/>
+          <g id="gateView" clip-path="url(#portalClip)"></g>
+        </g>
+        <!-- the entrance arch: frame, chase lights -->
+        <g filter="url(#gink)"><path fill="url(#archG)" fill-rule="evenodd" d="M74 362V222A96 96 0 0 1 266 222V362Z M98 362V222A72 72 0 0 1 242 222V362Z"/></g>
+        <path d="M80 362V222A90 90 0 0 1 260 222V362" fill="none" stroke="#ffd466" stroke-width="3"/>
+        <path d="M98 362V222A72 72 0 0 1 242 222V362" fill="none" stroke="#2b2452" stroke-width="3"/>
+        <g class="bulbs" data-p="0"><circle class="bulb" cx="86" cy="332" r="4.6" stroke="#2b2452" stroke-width="1.5"/><circle class="bulb" cx="86" cy="310" r="4.6" stroke="#2b2452" stroke-width="1.5"/><circle class="bulb" cx="86" cy="288" r="4.6" stroke="#2b2452" stroke-width="1.5"/><circle class="bulb" cx="86" cy="266" r="4.6" stroke="#2b2452" stroke-width="1.5"/><circle class="bulb" cx="86" cy="244" r="4.6" stroke="#2b2452" stroke-width="1.5"/><circle class="bulb" cx="86" cy="222" r="4.6" stroke="#2b2452" stroke-width="1.5"/><circle class="bulb" cx="88.1" cy="203.3" r="4.6" stroke="#2b2452" stroke-width="1.5"/><circle class="bulb" cx="94.3" cy="185.6" r="4.6" stroke="#2b2452" stroke-width="1.5"/><circle class="bulb" cx="104.3" cy="169.6" r="4.6" stroke="#2b2452" stroke-width="1.5"/><circle class="bulb" cx="117.6" cy="156.3" r="4.6" stroke="#2b2452" stroke-width="1.5"/><circle class="bulb" cx="133.6" cy="146.3" r="4.6" stroke="#2b2452" stroke-width="1.5"/><circle class="bulb" cx="151.3" cy="140.1" r="4.6" stroke="#2b2452" stroke-width="1.5"/><circle class="bulb" cx="170" cy="138" r="4.6" stroke="#2b2452" stroke-width="1.5"/><circle class="bulb" cx="188.7" cy="140.1" r="4.6" stroke="#2b2452" stroke-width="1.5"/><circle class="bulb" cx="206.4" cy="146.3" r="4.6" stroke="#2b2452" stroke-width="1.5"/><circle class="bulb" cx="222.4" cy="156.3" r="4.6" stroke="#2b2452" stroke-width="1.5"/><circle class="bulb" cx="235.7" cy="169.6" r="4.6" stroke="#2b2452" stroke-width="1.5"/><circle class="bulb" cx="245.7" cy="185.6" r="4.6" stroke="#2b2452" stroke-width="1.5"/><circle class="bulb" cx="251.9" cy="203.3" r="4.6" stroke="#2b2452" stroke-width="1.5"/><circle class="bulb" cx="254" cy="222" r="4.6" stroke="#2b2452" stroke-width="1.5"/><circle class="bulb" cx="254" cy="244" r="4.6" stroke="#2b2452" stroke-width="1.5"/><circle class="bulb" cx="254" cy="266" r="4.6" stroke="#2b2452" stroke-width="1.5"/><circle class="bulb" cx="254" cy="288" r="4.6" stroke="#2b2452" stroke-width="1.5"/><circle class="bulb" cx="254" cy="310" r="4.6" stroke="#2b2452" stroke-width="1.5"/><circle class="bulb" cx="254" cy="332" r="4.6" stroke="#2b2452" stroke-width="1.5"/></g>
+        <g filter="url(#gink)"><g class="tower">
+          <rect x="22" y="156" width="56" height="206" rx="10" fill="url(#towerG)"/>
+          <rect x="28" y="160" width="9" height="198" rx="4.5" fill="#ffffff" opacity=".25"/><rect x="30" y="290" width="14" height="6" rx="2" fill="#ffffff" opacity=".22"/><rect x="58" y="290" width="14" height="6" rx="2" fill="#ffffff" opacity=".22"/><rect x="44" y="302" width="14" height="6" rx="2" fill="#ffffff" opacity=".22"/><rect x="72" y="302" width="14" height="6" rx="2" fill="#ffffff" opacity=".22"/><rect x="30" y="314" width="14" height="6" rx="2" fill="#ffffff" opacity=".22"/><rect x="58" y="314" width="14" height="6" rx="2" fill="#ffffff" opacity=".22"/><rect x="52" y="170" width="14" height="6" rx="2" fill="#ffffff" opacity=".18"/><rect x="38" y="182" width="14" height="6" rx="2" fill="#ffffff" opacity=".18"/>
+          <circle cx="50" cy="200" r="11" fill="url(#winG)" stroke="#2b2452" stroke-width="3"/><path d="M39 200 H61 M50 189 V211" stroke="#e8a83a" stroke-width="2"/>
+          <rect x="40" y="232" width="20" height="30" rx="10" fill="url(#winG)" stroke="#2b2452" stroke-width="3"/>
+          <path d="M37 362 V338 A13 13 0 0 1 63 338 V362Z" fill="#9b6b4f" stroke="#2b2452" stroke-width="3"/><circle cx="56" cy="350" r="2" fill="#ffd466"/>
+          <rect x="16" y="152" width="10" height="12" rx="2" fill="#7d85f4" stroke="#2b2452" stroke-width="2"/><rect x="30" y="152" width="10" height="12" rx="2" fill="#7d85f4" stroke="#2b2452" stroke-width="2"/><rect x="44" y="152" width="10" height="12" rx="2" fill="#7d85f4" stroke="#2b2452" stroke-width="2"/><rect x="58" y="152" width="10" height="12" rx="2" fill="#7d85f4" stroke="#2b2452" stroke-width="2"/><rect x="72" y="152" width="10" height="12" rx="2" fill="#7d85f4" stroke="#2b2452" stroke-width="2"/>
+          <path d="M50 74 L14 152 L86 152Z" fill="#ff6fa3"/><path d="M50 74 L14 152 L26 152Z" fill="#ffffff"/><path d="M50 74 L38 152 L50 152Z" fill="#ffffff"/><path d="M50 74 L62 152 L74 152Z" fill="#ffffff"/><path d="M50 74 L14 152 L86 152Z" fill="none" stroke="#2b2452" stroke-width="2.5" stroke-linejoin="round"/>
+          <ellipse cx="50" cy="153" rx="38" ry="7" fill="#ffd466" stroke="#2b2452" stroke-width="2.5"/>
+          <line x1="50" y1="74" x2="50" y2="46" stroke="#2b2452" stroke-width="3" stroke-linecap="round"/>
+          <circle cx="50" cy="45" r="4" fill="#ffd466" stroke="#2b2452" stroke-width="2"/>
+        </g></g>
+        <g filter="url(#gink)"><g class="tower">
+          <rect x="262" y="156" width="56" height="206" rx="10" fill="url(#towerG)"/>
+          <rect x="268" y="160" width="9" height="198" rx="4.5" fill="#ffffff" opacity=".25"/><rect x="270" y="290" width="14" height="6" rx="2" fill="#ffffff" opacity=".22"/><rect x="298" y="290" width="14" height="6" rx="2" fill="#ffffff" opacity=".22"/><rect x="284" y="302" width="14" height="6" rx="2" fill="#ffffff" opacity=".22"/><rect x="312" y="302" width="14" height="6" rx="2" fill="#ffffff" opacity=".22"/><rect x="270" y="314" width="14" height="6" rx="2" fill="#ffffff" opacity=".22"/><rect x="298" y="314" width="14" height="6" rx="2" fill="#ffffff" opacity=".22"/><rect x="292" y="170" width="14" height="6" rx="2" fill="#ffffff" opacity=".18"/><rect x="278" y="182" width="14" height="6" rx="2" fill="#ffffff" opacity=".18"/>
+          <circle cx="290" cy="200" r="11" fill="url(#winG)" stroke="#2b2452" stroke-width="3"/><path d="M279 200 H301 M290 189 V211" stroke="#e8a83a" stroke-width="2"/>
+          <rect x="280" y="232" width="20" height="30" rx="10" fill="url(#winG)" stroke="#2b2452" stroke-width="3"/>
+          <path d="M277 362 V338 A13 13 0 0 1 303 338 V362Z" fill="#9b6b4f" stroke="#2b2452" stroke-width="3"/><circle cx="296" cy="350" r="2" fill="#ffd466"/>
+          <rect x="256" y="152" width="10" height="12" rx="2" fill="#7d85f4" stroke="#2b2452" stroke-width="2"/><rect x="270" y="152" width="10" height="12" rx="2" fill="#7d85f4" stroke="#2b2452" stroke-width="2"/><rect x="284" y="152" width="10" height="12" rx="2" fill="#7d85f4" stroke="#2b2452" stroke-width="2"/><rect x="298" y="152" width="10" height="12" rx="2" fill="#7d85f4" stroke="#2b2452" stroke-width="2"/><rect x="312" y="152" width="10" height="12" rx="2" fill="#7d85f4" stroke="#2b2452" stroke-width="2"/>
+          <path d="M290 74 L254 152 L326 152Z" fill="#ff6fa3"/><path d="M290 74 L254 152 L266 152Z" fill="#ffffff"/><path d="M290 74 L278 152 L290 152Z" fill="#ffffff"/><path d="M290 74 L302 152 L314 152Z" fill="#ffffff"/><path d="M290 74 L254 152 L326 152Z" fill="none" stroke="#2b2452" stroke-width="2.5" stroke-linejoin="round"/>
+          <ellipse cx="290" cy="153" rx="38" ry="7" fill="#ffd466" stroke="#2b2452" stroke-width="2.5"/>
+          <line x1="290" y1="74" x2="290" y2="46" stroke="#2b2452" stroke-width="3" stroke-linecap="round"/>
+          <circle cx="290" cy="45" r="4" fill="#ffd466" stroke="#2b2452" stroke-width="2"/>
+        </g></g>
+        <g><path d="M54 52 Q91 99 128 110" fill="none" stroke="#2b2452" stroke-width="1.6"/><path d="M58.6 63.7 L70.6 63.7 L64.6 75.7Z" fill="#ffd84d" stroke="#2b2452" stroke-width="1.5" stroke-linejoin="round"/><path d="M69.1 74.9 L81.1 74.9 L75.1 86.9Z" fill="#3ccfc0" stroke="#2b2452" stroke-width="1.5" stroke-linejoin="round"/><path d="M79.7 84.7 L91.7 84.7 L85.7 96.7Z" fill="#ff6fa3" stroke="#2b2452" stroke-width="1.5" stroke-linejoin="round"/><path d="M90.3 93 L102.3 93 L96.3 105Z" fill="#8c7bff" stroke="#2b2452" stroke-width="1.5" stroke-linejoin="round"/><path d="M100.9 99.8 L112.9 99.8 L106.9 111.8Z" fill="#ff9a4d" stroke="#2b2452" stroke-width="1.5" stroke-linejoin="round"/><path d="M111.4 105.1 L123.4 105.1 L117.4 117.1Z" fill="#5fb8ff" stroke="#2b2452" stroke-width="1.5" stroke-linejoin="round"/><path d="M212 110 Q249 99 286 52" fill="none" stroke="#2b2452" stroke-width="1.6"/><path d="M216.6 105.1 L228.6 105.1 L222.6 117.1Z" fill="#ffd84d" stroke="#2b2452" stroke-width="1.5" stroke-linejoin="round"/><path d="M227.1 99.8 L239.1 99.8 L233.1 111.8Z" fill="#3ccfc0" stroke="#2b2452" stroke-width="1.5" stroke-linejoin="round"/><path d="M237.7 93 L249.7 93 L243.7 105Z" fill="#ff6fa3" stroke="#2b2452" stroke-width="1.5" stroke-linejoin="round"/><path d="M248.3 84.7 L260.3 84.7 L254.3 96.7Z" fill="#8c7bff" stroke="#2b2452" stroke-width="1.5" stroke-linejoin="round"/><path d="M258.9 74.9 L270.9 74.9 L264.9 86.9Z" fill="#ff9a4d" stroke="#2b2452" stroke-width="1.5" stroke-linejoin="round"/><path d="M269.4 63.7 L281.4 63.7 L275.4 75.7Z" fill="#5fb8ff" stroke="#2b2452" stroke-width="1.5" stroke-linejoin="round"/></g>
+        <g class="flags"><path class="flag" d="M51 47 Q62 44 74 50 Q62 54 51 59Z" fill="#3ccfc0" stroke="#2b2452" stroke-width="2"/><path class="flag" d="M291 47 Q302 44 314 50 Q302 54 291 59Z" fill="#3ccfc0" stroke="#2b2452" stroke-width="2"/></g>
+        <g id="gateTop"></g>
+        <g filter="url(#gink)"><g class="sign">
+          <!-- the park's name sign; the title text is HTML laid over it (#gateSign) so it keeps the zhuyin layout -->
+          <rect x="72" y="86" width="196" height="58" rx="29" fill="url(#signG)"/>
+          <rect x="82" y="91" width="176" height="11" rx="5.5" fill="#ffffff" opacity=".3"/>
+        </g></g>
+        <g class="hang"><use href="#deco" x="80" y="200"/></g>
+        <g class="hang r"><use href="#deco" x="220" y="200"/></g>
+        <g class="sparks"><path class="spark" style="animation-delay:0s" d="M124 193 L126 198 L131 200 L126 202 L124 207 L122 202 L117 200 L122 198Z" fill="#ffffff"/><path class="spark" style="animation-delay:-0.7s" d="M214 179 L216 184 L221 186 L216 188 L214 193 L212 188 L207 186 L212 184Z" fill="#ffffff"/><path class="spark" style="animation-delay:-1.3s" d="M196 239 L198 244 L203 246 L198 248 L196 253 L194 248 L189 246 L194 244Z" fill="#ffffff"/><path class="spark" style="animation-delay:-0.4s" d="M140 255 L142 260 L147 262 L142 264 L140 269 L138 264 L133 262 L138 260Z" fill="#ffffff"/><path class="spark" style="animation-delay:-1s" d="M30 33 L32 38 L37 40 L32 42 L30 47 L28 42 L23 40 L28 38Z" fill="#ffffff"/><path class="spark" style="animation-delay:-0.2s" d="M250 23 L252 28 L257 30 L252 32 L250 37 L248 32 L243 30 L248 28Z" fill="#ffffff"/><path class="spark" style="animation-delay:-1.6s" d="M84 103 L86 108 L91 110 L86 112 L84 117 L82 112 L77 110 L82 108Z" fill="#ffffff"/></g>
+        <ellipse id="gateGround" cx="170" cy="366" rx="166" ry="11" fill="#a8dd8a" stroke="#2b2452" stroke-width="3"/>
+        <path d="M104 362H236L256 380H84Z" fill="#ff6f8f" stroke="#2b2452" stroke-width="3" stroke-linejoin="round"/>
+        <ellipse cx="120" cy="370" rx="9" ry="3.5" fill="#ffffff" opacity=".35"/><ellipse cx="146" cy="374" rx="9" ry="3.5" fill="#ffffff" opacity=".35"/><ellipse cx="194" cy="374" rx="9" ry="3.5" fill="#ffffff" opacity=".35"/><ellipse cx="220" cy="370" rx="9" ry="3.5" fill="#ffffff" opacity=".35"/><ellipse cx="108" cy="377" rx="9" ry="3.5" fill="#ffffff" opacity=".35"/><ellipse cx="232" cy="377" rx="9" ry="3.5" fill="#ffffff" opacity=".35"/>
+        <g filter="url(#gink)"><rect x="7" y="346" width="6" height="16" fill="#9b6b4f"/><circle cx="10" cy="336" r="14" fill="#5fbf6a"/><circle cx="5" cy="331" r="4" fill="#ffffff" opacity=".3"/></g><g filter="url(#gink)"><rect x="327" y="346" width="6" height="16" fill="#9b6b4f"/><circle cx="330" cy="336" r="14" fill="#5fbf6a"/><circle cx="325" cy="331" r="4" fill="#ffffff" opacity=".3"/></g>
+      </svg>
+    </button>
+    <div id="gateGuide"></div>
+    <div class="tap-hint"><i></i>點一下大門</div>
+  </section>
+  <section class="screen" id="select" hidden></section>
+  <section class="screen" id="map" hidden></section>
+  <section class="screen" id="lesson" hidden></section>
+  <section class="screen" id="reward" hidden></section>
+  <section class="screen" id="book" hidden></section>
+</main>
+
+<button id="bookBtn" hidden aria-label="貼紙本"><span id="bookIcon"></span><b id="countNum">0</b></button>
+<button id="me" hidden aria-label="我的好朋友"><span id="meArt"></span></button>
+<button id="adult" hidden aria-label="設定"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19.4 13a7.6 7.6 0 0 0 0-2l2-1.6-2-3.4-2.4 1a7.4 7.4 0 0 0-1.7-1L15 3.5h-4l-.4 2.5a7.4 7.4 0 0 0-1.7 1l-2.4-1-2 3.4 2 1.6a7.6 7.6 0 0 0 0 2l-2 1.6 2 3.4 2.4-1a7.4 7.4 0 0 0 1.7 1l.4 2.5h4l.4-2.5a7.4 7.4 0 0 0 1.7-1l2.4 1 2-3.4z" fill="#b8b2d6" stroke="#2b2452" stroke-width="1.6" stroke-linejoin="round"/><circle cx="12" cy="12" r="3.2" fill="#fff" stroke="#2b2452" stroke-width="1.6"/></svg><span>設定</span></button>
+<button id="homeBtn" hidden aria-label="回到大門"></button>
+<div id="panel" hidden></div>
+
+
+<!-- Spline scene slots: edit this file to plug in scenes exported from Spline -->
+<script src="spline/scenes.js"></script>
+<script src="js/zhuyin.js"></script>
+<script src="js/content.js"></script>
+<script src="js/state.js"></script>
+<script src="js/audio.js"></script>
+<script src="js/cast-three.js"></script>
+<script src="js/stage.js"></script>
+<script src="js/seasons.js"></script>
+<script src="js/world.js"></script>
+<script src="js/castle.js"></script>
+<script src="js/gate3d.js"></script>
+<script src="js/game.js"></script>
+
+</body></html>
